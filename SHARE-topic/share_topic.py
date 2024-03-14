@@ -1,9 +1,12 @@
 class SHARE_topic:
-    def __init__(self, sc_data_atac, sc_data_rna, n_topics):
+    def __init__(self, sc_data_atac, sc_data_rna, n_topics, alpha, beta, gamma, tau):
         self.sc_data_atac = sc_data_atac
         self.sc_data_rna = sc_data_rna
         self.n_topics = n_topics
-
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
+        self.tau = tau
     def sc_to_tensor(self):
     
         n = self.sc_data_atac.X.nonzero()[0].shape[0]
@@ -16,7 +19,7 @@ class SHARE_topic:
         rna = torch.tensor(rna)
         return rna, atac
     
-    def create_cell_batches (atac,n_batches,batch_size,n_cells,device):
+    def create_cell_batches (atac,n_batches,batch_size,n_cells):
     ## this function is used to create batch of cells for the atac data 
     # that should be transfered one at a time to the GPU to avoid GPU running 
      # out of memory. Because of the atac data format used to feed share-topic this function
@@ -83,23 +86,22 @@ class SHARE_topic:
         region_rep_ = region_rep_.type(torch.int64)
         return regions, region_batching, region_rep, region_rep_, indices, indices2
     
-    def initialization(self, n_cells,G,alpha,beta,gamma,tau,device):
-        m = torch.distributions.dirichlet.Dirichlet(alpha[0,:]) 
+    def initialization(self, n_cells,G,device):
+        m = torch.distributions.dirichlet.Dirichlet(self.alpha[0,:]) 
         theta_tmp = m.sample([n_cells])
         theta_tmp = theta_tmp.to(device)
         
-        m = torch.distributions.gamma.Gamma(gamma,tau)
+        m = torch.distributions.gamma.Gamma(self.gamma,self.tau)
         lam_tmp = m.sample([self.n_topics,G])
         lam_tmp = lam_tmp.to(device)
         
-        m =  torch.distributions.dirichlet.Dirichlet(beta[0,:])
+        m =  torch.distributions.dirichlet.Dirichlet(self.beta[0,:])
         phi_tmp = m.sample([self.n_topics])
         phi_tmp = phi_tmp.to(device)
         
         return theta_tmp, lam_tmp, phi_tmp
     
-    def move_to_GPU(c,region_rep, regions, indices, indices2, rep_c, rep_c_, region_rep_, R
-                , n_topics, device):
+    def move_to_GPU(self, c,region_rep, regions, indices, indices2, rep_c, rep_c_, region_rep_, R, device):
     
         c=c.to(device)
         region_rep = region_rep.to(device)
@@ -109,13 +111,16 @@ class SHARE_topic:
         rep_c = rep_c.to(device)
         rep_c_ = rep_c_.to(device)
         region_rep_ = region_rep_.to(device)
-        t = torch.arange(0,n_topics,dtype=torch.uint8,device=device).reshape(n_topics,1)
-        alpha = torch.ones([1,n_topics,],device=device)*(50/n_topics)
-        beta = torch.ones([1,R],device=device)*0.1
+        t = torch.arange(0,self.n_topics,dtype=torch.uint8,device=device).reshape(self.n_topics,1)
+        self.alpha = torch.ones([1,self.n_topics,],device=device)*(50/self.n_topics)
+        self.beta = torch.ones([1,R],device=device)*0.1
         
-        return c, region_rep, regions, indices, indices2, rep_c, rep_c_, region_rep_, t, alpha, beta
+        return self, c, region_rep, regions, indices, indices2, rep_c, rep_c_, region_rep_, t
     
-    def Gibbs_Sampler(self, atac,rna, n_samples,n_burnin, n_b_samples, n_cells,R, G,alpha, beta, gamma, tau, c, region_rep, regions,region_batching, indices, indices2, rep_c, rep_c_, region_rep_, t,atac_cell_batches , theta_tmp, phi_tmp, lam_tmp,device):
+    def Gibbs_Sampler(self,rna, n_samples,n_burnin,
+                       n_b_samples, n_cells,R, G, c, region_rep,
+                         regions,region_batching, indices, indices2, rep_c, rep_c_, region_rep_, 
+                         t,atac_cell_batches , theta_tmp, phi_tmp, lam_tmp,device):
     
         
          
@@ -216,22 +221,23 @@ class SHARE_topic:
                     
                 #######################################Sampling theta, lambda, and phi##########################
 
-                m = torch.distributions.gamma.Gamma(gamma+n_t_g_shape,(n_t_g_scale*tau+1)/tau)
+                m = torch.distributions.gamma.Gamma(self.gamma+n_t_g_shape,(n_t_g_scale*self.tau+1)/tau)
                 lam_tmp=m.sample()
                 lam_tmp=lam_tmp.T
                 lam[int(sample/n_burnin),:,:]=lam_tmp 
                 
-                m = torch.distributions.dirichlet.Dirichlet(beta+n_t_r.T)
+                m = torch.distributions.dirichlet.Dirichlet(self.beta+n_t_r.T)
                 phi_tmp = m.sample()
                 phi[int(sample/n_burnin),:,:] = phi_tmp 
-                m = torch.distributions.dirichlet.Dirichlet(alpha+n_t_c)
+                m = torch.distributions.dirichlet.Dirichlet(self.alpha+n_t_c)
                 
                 theta_tmp = m.sample()
                 theta[int(sample/n_burnin),:,:] = theta_tmp
                 time.sleep(0.1)
                 pbar.update(1)
         return theta, lam, phi 
-    def SHARE_Topic(self,alpha,beta,gamma,tau,batch_size,n_samples,n_burnin,dev= "cuda:0",
+    
+    def SHARE_Topic(self,batch_size,n_samples,n_burnin,dev= "cuda:0",
                 save_data=True,path=""):
     
         rna,atac=sc_to_tensor(self.sc_data_atac, self.sc_data_rna)
@@ -247,25 +253,27 @@ class SHARE_topic:
         n_cells = rna.shape[0]
         l = torch.unique(atac[1,:])
         R = l.shape[0]
-        alpha = torch.ones([1, self.n_topics])*alpha
-        beta = torch.ones([1,R])*beta
+        self.alpha = torch.ones([1, self.n_topics])*self.alpha
+        self.beta = torch.ones([1,R])*self.beta
         n_b_samples = int(n_samples/n_burnin)
         n_batches = n_cells+batch_size-(n_cells%batch_size)
         
-        atac_cell_batches, c, rep_c,rep_c_, ren = create_cell_batches(atac,n_batches,batch_size,n_cells,device)
+        atac_cell_batches, c, rep_c,rep_c_, cell_array = create_cell_batches(atac,n_batches,batch_size,n_cells)
         
-        regions, region_batching, region_rep, region_rep_, indices, indices2 = create_region_batches(atac,atac_cell_batches,ren)
+        regions, region_batching, region_rep, region_rep_, indices, indices2 = create_region_batches(atac, atac_cell_batches, cell_array)
         
-        theta_tmp, lam_tmp, phi_tmp = initialization(self, n_cells,G,alpha,beta,gamma,tau,device)
+        theta_tmp, lam_tmp, phi_tmp = initialization(self, n_cells,G,device)
         
         if dev!="CPU":
-            c, region_rep, regions, indices, indices2, rep_c, rep_c_, region_rep_, t, alpha, beta = move_to_GPU(c,
-                region_rep, regions, indices, indices2, rep_c, rep_c_, region_rep_, R, n_topics, device)
+            self, c, region_rep, regions, indices, indices2, rep_c, rep_c_, 
+            region_rep_, t = move_to_GPU(self, c, region_rep, regions, indices, 
+                                         indices2, rep_c, rep_c_, region_rep_, R, device)
         
         
         
-        theta, lam, phi = Gibbs_Sampler(self, atac,rna, n_samples,n_burnin, n_b_samples, n_cells,R, G,nalpha, beta, gamma, tau, c, 
-                    region_rep, regions, region_batching, indices, indices2, rep_c, rep_c_, region_rep_, t
-                    ,atac_cell_batches , theta_tmp, phi_tmp, lam_tmp, device)
+        theta, lam, phi = Gibbs_Sampler(self,rna, n_samples,n_burnin,
+                                        n_b_samples, n_cells,R, G, c, region_rep,
+                                            regions,region_batching, indices, indices2, rep_c, rep_c_, region_rep_, 
+                                            t,atac_cell_batches , theta_tmp, phi_tmp, lam_tmp,device)
         
         return theta, lam, phi
