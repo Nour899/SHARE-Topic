@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='SHARE-topic',  # Required. Your package's name.
+    name='SHARE_topic',  # Required. Your package's name.
     version='0.1.0',  # Required. Your package's version.
     author='Nour El Kazwini',  # Optional. The package author's name.
     author_email='nelkazwi@sissa.com',  # Optional. The package author's email address.
@@ -14,7 +14,7 @@ setup(
     url='https://github.com/Nour899/SHARE-Topic/',  # Optional. The URL to your package's repository or website.
     packages=find_packages(),  # Required. Automatically find all the packages and subpackages.
     install_requires=[
-        'numpy>=1.23.*',  # Optional. A list of your package's dependencies.
+        'numpy>=1.23',  # Optional. A list of your package's dependencies.
         # Add other dependencies as needed.
     ],
     classifiers=[
