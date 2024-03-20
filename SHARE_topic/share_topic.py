@@ -273,7 +273,7 @@ class SHARE_topic:
         
         theta_tmp, lam_tmp, phi_tmp = self.initialization(n_cells,G,device)
         
-        if dev!="CPU":
+        if dev!="cpu":
             c, region_rep, regions, indices, indices2, rep_c, rep_c_, region_rep_, t = self.move_to_GPU(c,region_rep, regions, indices, indices2, rep_c, rep_c_, region_rep_, R, device)
         
         
