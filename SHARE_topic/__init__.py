@@ -1,1 +1,1 @@
-#this can stay empty, it just signals that this is a (wannabe) package
+from .SHARE_topic import SHARE_topic 
