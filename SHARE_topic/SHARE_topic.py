@@ -246,7 +246,7 @@ class SHARE_topic:
                 pbar.update(1)
         return theta, lam, phi 
     
-    def SHARE_Topic(self,batch_size,n_samples,n_burnin,dev= "cuda:0",
+    def fit(self,batch_size,n_samples,n_burnin,dev= "cpu",
                 save_data=True,path=""):
     
         rna,atac = self.sc_to_tensor()
