@@ -7,5 +7,5 @@ The Gibbs sampler code is provided in a jupyter notebook.
 
 An example on of the analysis carried from the SHARE-Topic output is done on B-lymphoma 10x Multiome dataset.
 
-To run SHARE_topic in development version, use pip install -e . to load SHARE_topic as a module
+To run SHARE_topic in development version, use `pip install -e .` to load SHARE_topic as a module
 
