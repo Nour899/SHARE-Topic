@@ -14,8 +14,9 @@ setup(
     url='https://github.com/Nour899/SHARE-Topic/',  # Optional. The URL to your package's repository or website.
     packages=find_packages(),  # Required. Automatically find all the packages and subpackages.
     install_requires=[
-        'numpy>=1.23',  # Optional. A list of your package's dependencies.
-        # Add other dependencies as needed.
+        'scanpy>=1.9.8', 
+        'torch>=2.1.2',
+        'torch-scatter>=2.1.1',
     ],
     classifiers=[
         # Optional. A list of classifiers that describe your package. Check the list of classifiers at https://pypi.org/classifiers/
