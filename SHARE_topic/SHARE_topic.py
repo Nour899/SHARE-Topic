@@ -287,7 +287,11 @@ class SHARE_topic:
             c, region_rep, regions, indices, indices2, rep_c, rep_c_, region_rep_, t = self.move_to_GPU(c,region_rep, regions, indices, indices2, rep_c, rep_c_, region_rep_, R, device)
         
         
-        
+        else:
+            t = torch.arange(0,self.n_topics,dtype=torch.uint8,device=device).reshape(self.n_topics,1)
+            self.alpha = torch.ones([1,self.n_topics,],device=device)*(50/self.n_topics)
+            self.beta = torch.ones([1,R],device=device)*0.1
+
         theta, lam, phi = self.Gibbs_Sampler(n_samples,n_burnin,
                                         n_b_samples, batch_size, n_cells,R, G, c, region_rep,
                                             regions,region_batching, indices, indices2, rep_c, rep_c_, region_rep_, 
