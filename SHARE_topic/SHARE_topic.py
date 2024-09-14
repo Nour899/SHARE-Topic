@@ -387,8 +387,11 @@ class SHARE_topic:
         for n in torch.arange(0,N):
             theta_tmp=theta[n,:,:].to(device)
             lam_tmp=lam[n,:,:].to(device)
-            theta_tmp=theta_tmp.type(torch.cuda.DoubleTensor)
-            lam_tmp=lam_tmp.type(torch.cuda.DoubleTensor)
+            if device!="cpu":
+
+                theta_tmp=theta_tmp.type(torch.cuda.DoubleTensor)
+                lam_tmp=lam_tmp.type(torch.cuda.DoubleTensor)
+                
             for i in torch.arange(1,c.shape[0]): 
                 data_RNA_1=self.rna[c[i-1]:c[i],:].to(device)
                 m=torch.distributions.poisson.Poisson(lam_tmp.reshape([T,1,G]))
