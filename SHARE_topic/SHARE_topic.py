@@ -419,14 +419,14 @@ class SHARE_topic:
     
     def read_samples (self,t, path, burnin_samples):
     
-        theta = torch.load(str(path)+"/theta_"+str(t)+".txt",map_location=torch.device('cpu'))
+        theta = torch.load(str(path),map_location=torch.device('cpu'))
         m_theta = theta[burnin_samples:,:,:].mean(axis=0)
         m_theta = m_theta/m_theta.sum(axis=1)[:,np.newaxis] 
         
-        lam = torch.load(str(path)+"/lam_"+str(t)+".txt",map_location=torch.device('cpu'))
+        lam = torch.load(str(path),map_location=torch.device('cpu'))
         m_lam = lam[burnin_samples:,:,:].mean(axis=0)
         
-        phi = torch.load(str(path)+"/phi_"+str(t)+".txt",map_location=torch.device('cpu'))
+        phi = torch.load(str(path),map_location=torch.device('cpu'))
         m_phi = phi[burnin_samples:,:,:].mean(axis=0)
 
         
