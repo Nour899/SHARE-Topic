@@ -12,5 +12,5 @@ An example on of the analysis carried from the SHARE-Topic output is done on B-l
 
 Download the processed data from https://zenodo.org/records/10418760 to the "data" folder. 
 
-To run SHARE_topic in development version, use `pip install -e .` to load SHARE_topic as a module
+
 
