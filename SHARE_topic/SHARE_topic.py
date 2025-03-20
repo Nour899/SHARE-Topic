@@ -256,7 +256,7 @@ class SHARE_topic:
         return theta, lam, phi 
     
     def fit(self,batch_size,n_samples,n_burnin,dev= "cpu",
-                save_data=True,path=""):
+                save_data=True, save_samples = False, path=""):
     
         self.sc_to_tensor()
        
@@ -298,7 +298,12 @@ class SHARE_topic:
                                             t,atac_cell_batches , theta_tmp, phi_tmp, lam_tmp,device)
         
         torch.cuda.empty_cache()
-        
+
+        if save_samples:
+            torch.save(theta, str(path)+"theta_"+str(t)+".txt")
+            torch.save(lam, str(path)+"lam_"+str(t)+".txt")
+            torch.save(phi, str(path)+"phi_"+str(t)+".txt")
+
         return theta, lam, phi
     
     def compute_WAIC_ATAC(self, c,P, device, n_samples, theta, phi, regions, region_batching, rep_c,
@@ -419,14 +424,14 @@ class SHARE_topic:
     
     def read_samples (self,t, path, burnin_samples):
     
-        theta = torch.load(str(path),map_location=torch.device('cpu'))
+        theta = torch.load(str(path)+"theta_"+str(t)+".txt",map_location=torch.device('cpu'))
         m_theta = theta[burnin_samples:,:,:].mean(axis=0)
         m_theta = m_theta/m_theta.sum(axis=1)[:,np.newaxis] 
         
-        lam = torch.load(str(path),map_location=torch.device('cpu'))
+        lam = torch.load(str(path)+"lam_"+str(t)+".txt",map_location=torch.device('cpu'))
         m_lam = lam[burnin_samples:,:,:].mean(axis=0)
         
-        phi = torch.load(str(path),map_location=torch.device('cpu'))
+        phi = torch.load(str(path)+"phi_"+str(t)+".txt",map_location=torch.device('cpu'))
         m_phi = phi[burnin_samples:,:,:].mean(axis=0)
 
         
